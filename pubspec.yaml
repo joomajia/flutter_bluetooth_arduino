@@ -39,6 +39,8 @@ dependencies:
   layout: ^1.0.5
   flutter_speech: ^2.0.0
   flutter_bluetooth_serial: ^0.4.0
+  joystick: ^1.1.0
+  speech_to_text: ^6.3.0
 
 dev_dependencies:
   flutter_test:

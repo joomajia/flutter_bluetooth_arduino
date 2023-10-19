@@ -28,19 +28,19 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     return AppBar(
       toolbarHeight: 100.0,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(5))),
-      title: new Center(
+      title: Center(
           child: Row(
         children: [
-          new Text(Title!, textAlign: TextAlign.center),
+          Text(Title!, textAlign: TextAlign.center),
         ],
       )),
-      backgroundColor: Color.fromRGBO(237, 46, 39, 1),
+      backgroundColor: const Color.fromRGBO(237, 46, 39, 1),
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 8.0),
-          child: Container(
+          child: SizedBox(
             height: 60,
             width: 60,
             child: Consumer<StatusConexaoProvider>(
@@ -59,16 +59,15 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                                           const HomePage())); // push it back in
                             }
                           : onPress!(),
+                      style: ElevatedButton.styleFrom(
+                          shape: const CircleBorder(), backgroundColor: StatusConnectionProvider.device != null
+                              ? const Color.fromRGBO(15, 171, 118, 1)
+                              : Colors.black),
                       child: Icon(StatusConnectionProvider.device != null
                           ? Icons.bluetooth_connected
                           : Icons.bluetooth_disabled),
-                      style: ElevatedButton.styleFrom(
-                          shape: CircleBorder(),
-                          primary: StatusConnectionProvider.device != null
-                              ? Color.fromRGBO(15, 171, 118, 1)
-                              : Colors.black),
                     )
-                  : SizedBox.shrink());
+                  : const SizedBox.shrink());
             }),
           ),
         )

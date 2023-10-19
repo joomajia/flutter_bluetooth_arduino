@@ -2,7 +2,6 @@
 
 import 'dart:typed_data';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:bluet_app/SelecionarDispositivo.dart';
 import 'package:bluet_app/ControlePrincipal.dart';
@@ -66,7 +65,7 @@ class HomePage extends StatelessWidget {
                             connection?.output.add(Uint8List.fromList('1'.codeUnits)); // Включить светодиод на Arduino
                           }
                         },
-                        child: Text('Включить светодиод'),
+                        child: const Text('Включить светодиод'),
                       ),
                       ElevatedButton(
                         onPressed: () {
@@ -75,7 +74,7 @@ class HomePage extends StatelessWidget {
                                 .codeUnits)); // Выключить светодиод на Arduino
                           }
                         },
-                        child: Text('Выключить светодиод'),
+                        child: const Text('Выключить светодиод'),
                       ),
                       const Icon(Icons.bluetooth_disabled_sharp, size: 50),
                       const Text(

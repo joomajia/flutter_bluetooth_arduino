@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
@@ -18,6 +17,7 @@ class ButtonDoubleComponent extends StatefulWidget {
       this.connection,
       required this.clientID})
       : super(key: key);
+  @override
   _ButtonState createState() => _ButtonState();
 }
 
@@ -39,6 +39,7 @@ class _ButtonState extends State<ButtonDoubleComponent> {
     });
   }
 
+  @override
   Widget build(BuildContext context) {
     return (SizedBox(
         height: 60,
@@ -50,7 +51,7 @@ class _ButtonState extends State<ButtonDoubleComponent> {
           },
           child: Text(
             widget.buttonName!,
-            style: TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
           ),
           // color: buttonClicado
           //     ? Color.fromRGBO(237, 46, 39, 1)

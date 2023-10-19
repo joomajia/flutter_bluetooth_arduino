@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 
 class StatusConexaoProvider extends ChangeNotifier {
-  BluetoothDevice? device = null;
+  BluetoothDevice? device;
 
   BluetoothDevice? get getDevice => device;
 

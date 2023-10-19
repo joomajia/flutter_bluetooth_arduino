@@ -2,14 +2,14 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
-import 'package:bluet_app/components/ButtonDouble.dart';
-import 'package:bluet_app/components/ButtonSingle.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
 import 'components/VoiceButtonPage.dart';
 
 class ControlePrincipalPage extends StatefulWidget {
   final BluetoothDevice? server;
-  const ControlePrincipalPage({this.server});
+  const ControlePrincipalPage({super.key, this.server});
 
   @override
   _ControlePrincipalPage createState() => _ControlePrincipalPage();
@@ -39,28 +39,123 @@ class _ControlePrincipalPage extends State<ControlePrincipalPage> {
 
   bool isDisconnecting = false;
   bool buttonClicado = false;
+  double speed = 1;
+  double bbb = 0;
+  String? command;
+  final List<String> _languages = ['en_US'];
 
-  List<String> _languages = ['en_US'];
+  bool isMoving = false;
+
+  String message = "";
+
+  double myDoubleValue = 0.5; // Ваше число double
+
+  void sendCommand() {
+    if (connection != null) {
+      String dataToSend = speed.toString();
+      connection!.output.add(Uint8List.fromList(speed.toString().codeUnits));
+      connection!.output.allSent.then((_) {
+        print('$speed');
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    if (isConnected) {
+      isDisconnecting = true;
+      connection!.dispose();
+      connection = null;
+    }
+  }
+
+  void sendData(int data) {
+    if (connection != null) {
+      connection!.output.add(Uint8List.fromList([data]));
+      connection?.output.allSent.then((_) {
+        setState(() {
+          message = "Отправлено: $data";
+        });
+      });
+    }
+  }
+
+  void sendChar(String char) {
+    if (connection != null) {
+      connection?.output.add(Uint8List.fromList(char.codeUnits));
+      connection!.output.allSent.then((_) {
+        setState(() {
+          message = "Отправлено: $char";
+        });
+      });
+    }
+  }
+
+  void moveForward() {
+    // Отправить команду на движение вперед на Arduino (по аналогии с предыдущими ответами).
+    if (connection != null && connection!.isConnected) {
+      connection!.output
+          .add(Uint8List.fromList('F'.codeUnits)); // Движение вперед
+    }
+  }
+
+  void moveStop() {
+    // Отправить команду на остановку на Arduino (по аналогии с предыдущими ответами).
+    if (connection != null && connection!.isConnected) {
+      connection!.output.add(Uint8List.fromList('S'.codeUnits));
+    }
+  }
+
+  final SpeechToText _speechToText = SpeechToText();
+  bool _speechEnabled = false;
+  String _lastWords = '';
+
+  /// This has to happen only once per app
+  void _initSpeech() async {
+    _speechEnabled = await _speechToText.initialize();
+    setState(() {});
+  }
+
+  /// Each time to start a speech recognition session
+  void _startListening() async {
+    await _speechToText.listen(onResult: _onSpeechResult);
+    setState(() {});
+  }
+
+  /// Manually stop the active speech recognition session
+  /// Note that there are also timeouts that each platform enforces
+  /// and the SpeechToText plugin supports setting timeouts on the
+  /// listen method.
+  void _stopListening() async {
+    await _speechToText.stop();
+    setState(() {});
+  }
+
+  /// This is the callback that the SpeechToText plugin calls when
+  /// the platform returns recognized words.
+  void _onSpeechResult(SpeechRecognitionResult result) {
+    setState(() {
+      _lastWords = result.recognizedWords;
+    });
+  }
+
+// ...
+
+// ...
 
   @override
   void initState() {
     super.initState();
-
-    BluetoothConnection.toAddress(widget.server!.address).then((_connection) {
+    _initSpeech();
+    BluetoothConnection.toAddress(widget.server!.address).then((connection) {
       print('Connected to device');
-      connection = _connection;
+      connection = connection;
       setState(() {
         isConnecting = false;
         isDisconnecting = false;
       });
-
-      connection!.input!.listen(_onDataReceived).onDone(() {
-        // Example: Detect which side closed the connection
-        // There should be `isDisconnecting` flag to show are we are (locally)
-        // in middle of disconnecting process, should be set before calling
-        // `dispose`, `finish` or `close`, which all causes to disconnect.
-        // If we except the disconnection, `onDone` should be fired as result.
-        // If we didn't except this (no flag set), it means closing by remote.
+      connection.input!.listen(_onDataReceived).onDone(() {
         if (isDisconnecting) {
           print('Disconnected localy!');
         } else {
@@ -77,40 +172,28 @@ class _ControlePrincipalPage extends State<ControlePrincipalPage> {
   }
 
   @override
-  void dispose() {
-    // Avoid memory leak (`setState` after dispose) and disconnect
-    if (isConnected) {
-      isDisconnecting = true;
-      connection!.dispose();
-      connection = null;
-    }
-
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    messages.map((_message) {
+    messages.map((message) {
       return Row(
+        mainAxisAlignment: message.whom == clientID
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         children: <Widget>[
           Container(
-            child: Text(
-                (text) {
-                  return text == '/shrug' ? '¯\\_(ツ)_/¯' : text;
-                }(_message.text.trim()),
-                style: const TextStyle(color: Colors.white)),
             padding: const EdgeInsets.all(12.0),
             margin: const EdgeInsets.only(bottom: 8.0, left: 8.0, right: 8.0),
             width: 222.0,
             decoration: BoxDecoration(
                 color:
-                    _message.whom == clientID ? Colors.blueAccent : Colors.grey,
+                    message.whom == clientID ? Colors.blueAccent : Colors.grey,
                 borderRadius: BorderRadius.circular(7.0)),
+            child: Text(
+                (text) {
+                  return text == '/shrug' ? '¯\\_(ツ)_/¯' : text;
+                }(message.text.trim()),
+                style: const TextStyle(color: Colors.white)),
           ),
         ],
-        mainAxisAlignment: _message.whom == clientID
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
       );
     }).toList();
 
@@ -128,13 +211,13 @@ class _ControlePrincipalPage extends State<ControlePrincipalPage> {
                   child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Column(children: [
-                          Container(
+                        const Column(children: [
+                          SizedBox(
                               height: 60, width: 90, child: SizedBox.shrink())
                         ]),
                         const SizedBox(width: 30),
                         Column(children: [
-                          Container(
+                          SizedBox(
                             height: 60,
                             width: 90,
                             child: VoiceButtonComponent(
@@ -149,7 +232,7 @@ class _ControlePrincipalPage extends State<ControlePrincipalPage> {
                             children: [
                               Container(
                                 child: DropdownButton<String>(
-                                  value: language == null ? 'en_US' : language,
+                                  value: language ?? 'en_US',
                                   icon: const Icon(Icons.keyboard_arrow_down),
                                   items: _languages.map((String items) {
                                     return DropdownMenuItem(
@@ -169,130 +252,238 @@ class _ControlePrincipalPage extends State<ControlePrincipalPage> {
                             ]),
                       ]),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 20),
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Column(children: [
-                          ButtonDoubleComponent(
-                            buttonName: "A/B",
-                            comandOn: '1',
-                            comandOff: '0',
-                            clientID: clientID,
-                            connection: connection,
-                          ),
-                        ]),
-                        const SizedBox(width: 30),
-                        Column(children: [
-                          ButtonDoubleComponent(
-                            buttonName: "C/D",
-                            comandOn: 'c',
-                            comandOff: 'd',
-                            clientID: clientID,
-                            connection: connection,
-                          ),
-                        ]),
-                        const SizedBox(width: 30),
-                        Column(children: [
-                          ButtonDoubleComponent(
-                            buttonName: "E/F",
-                            comandOn: 'e',
-                            comandOff: 'f',
-                            clientID: clientID,
-                            connection: connection,
-                          ),
-                        ]),
-                      ]),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      // If listening is active show the recognized words
+                      _speechToText.isListening
+                          ? _lastWords
+                          // If listening isn't active but could be tell the user
+                          // how to start it, otherwise indicate that speech
+                          // recognition is not yet ready or not supported on
+                          // the target device
+                          : _speechEnabled
+                              ? 'Tap the microphone to start listening...'
+                              : 'Speech not available',
+                    ),
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 20),
-                  child: Row(
+                  child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Column(children: [
-                          ButtonDoubleComponent(
-                            buttonName: "G/H",
-                            comandOn: 'g',
-                            comandOff: 'h',
-                            clientID: clientID,
-                            connection: connection,
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              GestureDetector(
+                                onLongPressStart: (details) {
+                                  setState(() {
+                                    isMoving = true;
+                                    moveForward(); // Начать движение вперед
+                                  });
+                                },
+                                onLongPressEnd: (details) {
+                                  setState(() {
+                                    isMoving = false;
+                                    moveStop(); // Остановить движение
+                                  });
+                                },
+                                child: Container(
+                                  width: 100,
+                                  height: 100,
+                                  color: isMoving ? Colors.green : Colors.red,
+                                  child: Center(
+                                    child: Text(
+                                        isMoving ? 'Движение' : 'Остановлено'),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
+
+                          ElevatedButton(
+                            onPressed: () {
+                              sendData(bbb
+                                  .round()); // Отправка символа 'A' на Arduino
+                            },
+                            child: const Text('Отправить символ на Arduino'),
+                          ),
+
+                          ElevatedButton(
+                            onPressed: () {
+                              sendChar(
+                                  "ddd"); // Отправка символа 'A' на Arduino
+                            },
+                            child: const Text('Отправить символ на Arduino'),
+                          ),
+
+                          Slider(
+                            value: speed,
+                            onChanged: (value) {
+                              setState(() {
+                                speed = value;
+                                bbb = speed * 255;
+                                print(bbb);
+                                sendChar(bbb.toString());
+                                // sendData(bbb.round());
+                              });
+                            },
+                          ),
+
+                          FloatingActionButton(
+                            onPressed:
+                                // If not yet listening for speech start, otherwise stop
+                                _speechToText.isNotListening
+                                    ? _startListening
+                                    : _stopListening,
+                            tooltip: 'Listen',
+                            child: Icon(_speechToText.isNotListening
+                                ? Icons.mic_off
+                                : Icons.mic),
+                          ),
+
+                          Text(message),
+                          ElevatedButton(
+                            onPressed: () {
+                              sendData(
+                                  bbb.round()); // Отправка числа 42 на Arduino
+                            },
+                            child: const Text('Скорость'),
+                          ),
+
+                          // ElevatedButton(
+                          //   onPressed: () {
+                          //     sendData(100); // Отправка числа 42 на Arduino
+                          //   },
+                          //   child: Text('сотка'),
+                          // ),
+
+                          // ElevatedButton(
+                          //   onPressed: () {
+                          //     if (connection != null &&
+                          //         connection!.isConnected) {
+                          //       connection!.output.add(Uint8List.fromList(
+                          //           'F'.codeUnits)); // Движение вперед
+                          //     }
+                          //   },
+                          //   onLongPress: () {
+                          //     if (connection != null &&
+                          //         connection!.isConnected) {
+                          //       connection!.output.add(Uint8List.fromList(
+                          //           'F'.codeUnits)); // Движение вперед
+                          //     }
+                          //   },
+                          //   child: Text('Вперед'),
+                          // ),
+                          // ElevatedButton(
+                          //   onPressed: () {
+                          //     if (connection != null &&
+                          //         connection!.isConnected) {
+                          //       connection!.output
+                          //           .add(Uint8List.fromList('L'.codeUnits));
+                          //     }
+                          //   },
+                          //   onLongPress: () {
+                          //     if (connection != null &&
+                          //         connection!.isConnected) {
+                          //       connection!.output
+                          //           .add(Uint8List.fromList('L'.codeUnits));
+                          //     }
+                          //   },
+                          //   child: Text('Лево'),
+                          // ),
+                          // ElevatedButton(
+                          //   onPressed: () {
+                          //     if (connection != null &&
+                          //         connection!.isConnected) {
+                          //       connection!.output.add(Uint8List.fromList(
+                          //           'R'.codeUnits)); // Движение вперед
+                          //     }
+                          //   },
+                          //   onLongPress: () {
+                          //     if (connection != null &&
+                          //         connection!.isConnected) {
+                          //       connection!.output.add(Uint8List.fromList(
+                          //           'R'.codeUnits)); // Движение вперед
+                          //     }
+                          //   },
+                          //   child: Text('Право'),
+                          // ),
+                          // ElevatedButton(
+                          //   onPressed: () {
+                          //     if (connection != null &&
+                          //         connection!.isConnected) {
+                          //       connection!.output.add(Uint8List.fromList(
+                          //           'B'.codeUnits)); // Движение вперед
+                          //     }
+                          //   },
+                          //   onLongPress: () {
+                          //     if (connection != null &&
+                          //         connection!.isConnected) {
+                          //       connection!.output.add(Uint8List.fromList(
+                          //           'B'.codeUnits)); // Движение вперед
+                          //     }
+                          //   },
+                          //   child: Text('Назад'),
+                          // ),
+                          // ElevatedButton(
+                          //   onPressed: () {
+                          //     if (connection != null &&
+                          //         connection!.isConnected) {
+                          //       connection!.output.add(Uint8List.fromList(
+                          //           'S'.codeUnits)); // Движение вперед
+                          //     }
+                          //   },
+                          //   child: Text('STOP'),
+                          // ),
+
+                          ElevatedButton(
+                            onPressed: () {
+                              if (connection != null &&
+                                  connection!.isConnected) {
+                                connection!.output.add(Uint8List.fromList(
+                                    1.toString().codeUnits)); // Движение вперед
+                              }
+                            },
+                            child: const Text('J'),
+                          ),
+
+                          ElevatedButton(
+                            onPressed: () {
+                              if (connection != null &&
+                                  connection!.isConnected) {
+                                connection!.output.add(Uint8List.fromList(0.5
+                                    .toString()
+                                    .codeUnits)); // Движение вперед
+                              }
+                            },
+                            child: const Text('K'),
+                          ),
+                          // Column(
+                          //   mainAxisAlignment: MainAxisAlignment.center,
+                          //   children: <Widget>[
+                          //     Text('Speed: ${speed.toStringAsFixed(2)}'),
+                          //     Slider(
+                          //       value: speed,
+                          //       onChanged: (value) {
+                          //         setState(() {
+                          //           speed = value;
+                          //           connection!.output.add(Uint8List.fromList(
+                          //               speed.toString().codeUnits));
+                          //           connection!.output.allSent.then((_) {
+                          //             print('$speed');
+                          //           });
+
+                          //         });
+                          //       },
+                          //     ),
+                          //   ],
+                          // ),
                         ]),
                         const SizedBox(width: 30),
-                        Column(children: [
-                          ButtonDoubleComponent(
-                            buttonName: "I/J",
-                            comandOn: 'i',
-                            comandOff: 'j',
-                            clientID: clientID,
-                            connection: connection,
-                          ),
-                        ]),
-                        const SizedBox(width: 30),
-                        Column(children: [
-                          ButtonDoubleComponent(
-                            buttonName: "K/L",
-                            comandOn: 'k',
-                            comandOff: 'l',
-                            clientID: clientID,
-                            connection: connection,
-                          ),
-                        ]),
-                      ]),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 20),
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            if (connection != null && connection!.isConnected) {
-                              connection?.output.add(Uint8List.fromList('1'
-                                  .codeUnits)); // Включить светодиод на Arduino
-                            }
-                          },
-                          child: Text('Включить светодиод'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            if (connection != null && connection!.isConnected) {
-                              connection!.output.add(Uint8List.fromList('0'
-                                  .codeUnits)); // Выключить светодиод на Arduino
-                            }
-                          },
-                          child: Text('Выключить светодиод'),
-                        ),
-                        Column(children: [
-                          ButtonDoubleComponent(
-                            buttonName: "M/N",
-                            comandOn: 'm',
-                            comandOff: 'n',
-                            clientID: clientID,
-                            connection: connection,
-                          ),
-                        ]),
-                        const SizedBox(width: 30),
-                        Column(children: [
-                          ButtonDoubleComponent(
-                            buttonName: "O/P",
-                            comandOn: 'o',
-                            comandOff: 'p',
-                            clientID: clientID,
-                            connection: connection,
-                          ),
-                        ]),
-                        const SizedBox(width: 30),
-                        Column(children: [
-                          ButtonDoubleComponent(
-                            buttonName: "Q/R",
-                            comandOn: 'q',
-                            comandOff: 'r',
-                            clientID: clientID,
-                            connection: connection,
-                          ),
-                        ]),
                       ]),
                 ),
                 // Padding(
@@ -302,153 +493,15 @@ class _ControlePrincipalPage extends State<ControlePrincipalPage> {
                 //       children: [
                 //         Column(children: [
                 //           ButtonDoubleComponent(
-                //             buttonName: "S/T",
-                //             comandOn: 's',
-                //             comandOff: 't',
-                //             clientID: clientID,
-                //             connection: connection,
-                //           ),
-                //         ]),
-                //         const SizedBox(width: 30),
-                //         Column(children: [
-                //           ButtonDoubleComponent(
-                //             buttonName: "U/V",
-                //             comandOn: 'u',
-                //             comandOff: 'v',
-                //             clientID: clientID,
-                //             connection: connection,
-                //           ),
-                //         ]),
-                //         const SizedBox(width: 30),
-                //         Column(children: [
-                //           ButtonDoubleComponent(
-                //             buttonName: "W/X",
-                //             comandOn: 'w',
-                //             comandOff: 'x',
+                //             buttonName: "R",
+                //             comandOn: '1',
+                //             comandOff: '0',
                 //             clientID: clientID,
                 //             connection: connection,
                 //           ),
                 //         ]),
                 //       ]),
-                // ),
-                // Padding(
-                //   padding: const EdgeInsets.only(bottom: 20),
-                //   child: Row(
-                //       mainAxisAlignment: MainAxisAlignment.center,
-                //       children: [
-                //         Column(children: [
-                //           ButtonDoubleComponent(
-                //             buttonName: "Y/Z",
-                //             comandOn: 'y',
-                //             comandOff: 'z',
-                //             clientID: clientID,
-                //             connection: connection,
-                //           ),
-                //         ]),
-                //         const SizedBox(width: 30),
-                //         Column(children: [
-                //           ButtonDoubleComponent(
-                //             buttonName: "0/1",
-                //             comandOn: '0',
-                //             comandOff: '1',
-                //             clientID: clientID,
-                //             connection: connection,
-                //           ),
-                //         ]),
-                //         const SizedBox(width: 30),
-                //         Column(children: [
-                //           ButtonDoubleComponent(
-                //             buttonName: "2/3",
-                //             comandOn: '2',
-                //             comandOff: '3',
-                //             clientID: clientID,
-                //             connection: connection,
-                //           ),
-                //         ]),
-                //       ]),
-                // ),
-                // Padding(
-                //   padding: const EdgeInsets.only(bottom: 20),
-                //   child: Row(
-                //       mainAxisAlignment: MainAxisAlignment.center,
-                //       children: [
-                //         Column(children: [
-                //           ButtonDoubleComponent(
-                //             buttonName: "4/5",
-                //             comandOn: '4',
-                //             comandOff: '5',
-                //             clientID: clientID,
-                //             connection: connection,
-                //           ),
-                //         ]),
-                //         const SizedBox(width: 30),
-                //         Column(children: [
-                //           ButtonDoubleComponent(
-                //             buttonName: "6/7",
-                //             comandOn: '6',
-                //             comandOff: '7',
-                //             clientID: clientID,
-                //             connection: connection,
-                //           ),
-                //         ]),
-                //         const SizedBox(width: 30),
-                //         Column(children: [
-                //           ButtonDoubleComponent(
-                //             buttonName: "8/9",
-                //             comandOn: '8',
-                //             comandOff: '9',
-                //             clientID: clientID,
-                //             connection: connection,
-                //           ),
-                //         ]),
-                //       ]),
-                // ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 30),
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Column(children: [
-                        //   ButtonSingleComponent(
-                        //     buttonName: "+",
-                        //     comandOn: '+',
-                        //     colorButton: Color.fromRGBO(238, 57, 61, 1),
-                        //     clientID: clientID,
-                        //     connection: connection,
-                        //   ),
-                        // ]),
-                        // const SizedBox(width: 10),
-                        // Column(children: [
-                        //   ButtonSingleComponent(
-                        //     buttonName: "-",
-                        //     comandOn: '-',
-                        //     colorButton: Color.fromRGBO(8, 164, 113, 1),
-                        //     clientID: clientID,
-                        //     connection: connection,
-                        //   ),
-                        // ]),
-                        // const SizedBox(width: 10),
-                        // Column(children: [
-                        //   ButtonSingleComponent(
-                        //     buttonName: "*",
-                        //     comandOn: '*',
-                        //     colorButton: Color.fromRGBO(239, 206, 45, 1),
-                        //     clientID: clientID,
-                        //     connection: connection,
-                        //   ),
-                        // ]),
-                        // const SizedBox(width: 10),
-                        // Column(children: [
-                        //   ButtonSingleComponent(
-                        //     buttonName: "/",
-                        //     comandOn: '/',
-                        //     colorButton: Color.fromRGBO(49, 86, 188, 1),
-                        //     clientID: clientID,
-                        //     connection: connection,
-                        //   ),
-                        // ]),
-                      ]),
-                ),
+                // )
               ],
             ),
           ),
@@ -506,3 +559,33 @@ class _ControlePrincipalPage extends State<ControlePrincipalPage> {
     }
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+// Метод для подключения к Arduino
+
+// void connectToDevice() async {
+//   List<BluetoothDevice> devices = await bluetooth.getBondedDevices();
+//   for (BluetoothDevice device in devices) {
+//     if (device.name == "Имя вашего Arduino") {
+//       try {
+//         connection = await BluetoothConnection.toAddress(device.address);
+//       } catch (error) {
+//         print(error);
+//       }
+//       break;
+//     }
+//   }
+// }
+
+// Метод для отправки данных на Arduino
+
+

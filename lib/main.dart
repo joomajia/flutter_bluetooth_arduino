@@ -1,16 +1,20 @@
 import 'package:bluet_app/HomePage.dart';
-import 'package:flutter/material.dart'
-    show BuildContext, MaterialApp, StatelessWidget, Widget, runApp;
+import 'package:flutter/material.dart';
 import 'package:bluet_app/SelecionarDispositivo.dart';
-import 'package:bluet_app/HomePage.dart';
 import 'package:provider/provider.dart';
 import 'provider/StatusConexaoProvider.dart';
 
+
+// void main() => runApp(MyAppik());
+
+
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -23,7 +27,7 @@ class MyApp extends StatelessWidget {
           title: 'dfgdfgfd',
           initialRoute: '/',
           routes: {
-            '/': (context) => HomePage(),
+            '/': (context) => const HomePage(),
             '/selectDevice': (context) => const SelecionarDispositivoPage(),
           },
         ));

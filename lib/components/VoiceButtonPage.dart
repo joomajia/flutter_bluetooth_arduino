@@ -1,8 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:flutter_speech/flutter_speech.dart';
 
@@ -17,6 +15,7 @@ class VoiceButtonComponent extends StatefulWidget {
     this.languageSelected,
     required this.clientID,
   }) : super(key: key);
+  @override
   _VoiceButtonState createState() => _VoiceButtonState();  
 }
 
@@ -27,8 +26,8 @@ class Language {
   const Language(this.name, this.code);
 }
 
-const languages = const [
-  const Language('English', 'en_US'),
+const languages = [
+  Language('English', 'en_US'),
 ];
 
 class _Message {
@@ -124,23 +123,23 @@ class _VoiceButtonState extends State<VoiceButtonComponent> {
 
   void errorHandler() => activateSpeechRecognizer();
 
+  @override
   Widget build(BuildContext context) {
   return (ElevatedButton(          
           onPressed:  (){
             print('Hello');////////////////////////////////////////////////////////////////////////////////
             _speechRecognitionAvailable && !_isListening
                         ? () => start()
-                        : null;},                        
+                        : null;},
+          style: ElevatedButton.styleFrom(
+                          shape: const CircleBorder(), backgroundColor: _isListening
+                              ? const Color.fromRGBO(255, 255, 0, 1)
+                              : Colors.black),                        
           child: Icon(
             _isListening
                         ? Icons.settings_voice
                         : Icons.settings_voice_outlined,                        
           ),
-          style: ElevatedButton.styleFrom(
-                          shape: CircleBorder(),                          
-                          primary: _isListening
-                              ? Color.fromRGBO(255, 255, 0, 1)
-                              : Colors.black),
           
         ));
   }

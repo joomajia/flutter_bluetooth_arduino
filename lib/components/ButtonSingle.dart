@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -19,6 +18,7 @@ class ButtonSingleComponent extends StatefulWidget {
       required this.clientID,
       this.colorButton})
       : super(key: key);
+  @override
   _ButtonState createState() => _ButtonState();
 }
 
@@ -34,8 +34,9 @@ class _ButtonState extends State<ButtonSingleComponent> {
   final TextEditingController textEditingController = TextEditingController();
   List<_Message> messages = <_Message>[];
 
+  @override
   Widget build(BuildContext context) {
-    return (Container(
+    return (SizedBox(
         height: 60,
         width: 80,
         child: ElevatedButton(
@@ -44,7 +45,7 @@ class _ButtonState extends State<ButtonSingleComponent> {
           },
           child: Text(
             widget.buttonName!,
-            style: TextStyle(color: Colors.white, fontSize: 25),
+            style: const TextStyle(color: Colors.white, fontSize: 25),
           ),
           // color: widget.colorButton!,
           // shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),

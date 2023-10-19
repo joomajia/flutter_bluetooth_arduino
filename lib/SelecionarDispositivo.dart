@@ -31,7 +31,7 @@ class _DeviceWithAvailability extends BluetoothDevice {
   _DeviceAvailability? availability;
   int? rssi;
 
-  _DeviceWithAvailability(this.device, this.availability, [this.rssi])
+  _DeviceWithAvailability(this.device, this.availability)
       : super(address: device!.address);
 }
 
@@ -79,10 +79,10 @@ class _SelecionarDispositivoPage extends State<SelecionarDispositivoPage> {
       setState(() {
         Iterator i = devices.iterator;
         while (i.moveNext()) {
-          var _device = i.current;
-          if (_device.device == r.device) {
-            _device.availability = _DeviceAvailability.yes;
-            _device.rssi = r.rssi;
+          var device = i.current;
+          if (device.device == r.device) {
+            device.availability = _DeviceAvailability.yes;
+            device.rssi = r.rssi;
           }
         }
       });
@@ -107,11 +107,11 @@ class _SelecionarDispositivoPage extends State<SelecionarDispositivoPage> {
   Widget build(BuildContext context) {
     List<ListaBluetoothPage> list = devices
         .map(
-          (_device) => ListaBluetoothPage(
-            device: _device.device,
+          (device) => ListaBluetoothPage(
+            device: device.device,
             onTap: () {
               Provider.of<StatusConexaoProvider>(context, listen: false)
-                  .setDevice(_device.device!);
+                  .setDevice(device.device!);
               Navigator.of(context).pushReplacement(MaterialPageRoute(
                   settings: const RouteSettings(name: '/'),
                   builder: (context) => const HomePage()));
