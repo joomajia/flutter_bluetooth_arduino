@@ -1,5 +1,6 @@
 // ignore_for_file: file_names
 import 'dart:typed_data';
+import 'package:bluet_app/components/ButtonDouble.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
@@ -93,15 +94,12 @@ class _ControlePrincipalPage extends State<ControlePrincipalPage> {
   }
 
   void moveForward() {
-    // Отправить команду на движение вперед на Arduino (по аналогии с предыдущими ответами).
     if (connection != null && connection!.isConnected) {
-      connection!.output
-          .add(Uint8List.fromList('F'.codeUnits)); // Движение вперед
+      connection!.output.add(Uint8List.fromList('F'.codeUnits));
     }
   }
 
   void moveStop() {
-    // Отправить команду на остановку на Arduino (по аналогии с предыдущими ответами).
     if (connection != null && connection!.isConnected) {
       connection!.output.add(Uint8List.fromList('S'.codeUnits));
     }
@@ -361,57 +359,57 @@ class _ControlePrincipalPage extends State<ControlePrincipalPage> {
                           //   child: Text('сотка'),
                           // ),
 
-                          // ElevatedButton(
-                          //   onPressed: () {
-                          //     if (connection != null &&
-                          //         connection!.isConnected) {
-                          //       connection!.output.add(Uint8List.fromList(
-                          //           'F'.codeUnits)); // Движение вперед
-                          //     }
-                          //   },
-                          //   onLongPress: () {
-                          //     if (connection != null &&
-                          //         connection!.isConnected) {
-                          //       connection!.output.add(Uint8List.fromList(
-                          //           'F'.codeUnits)); // Движение вперед
-                          //     }
-                          //   },
-                          //   child: Text('Вперед'),
-                          // ),
-                          // ElevatedButton(
-                          //   onPressed: () {
-                          //     if (connection != null &&
-                          //         connection!.isConnected) {
-                          //       connection!.output
-                          //           .add(Uint8List.fromList('L'.codeUnits));
-                          //     }
-                          //   },
-                          //   onLongPress: () {
-                          //     if (connection != null &&
-                          //         connection!.isConnected) {
-                          //       connection!.output
-                          //           .add(Uint8List.fromList('L'.codeUnits));
-                          //     }
-                          //   },
-                          //   child: Text('Лево'),
-                          // ),
-                          // ElevatedButton(
-                          //   onPressed: () {
-                          //     if (connection != null &&
-                          //         connection!.isConnected) {
-                          //       connection!.output.add(Uint8List.fromList(
-                          //           'R'.codeUnits)); // Движение вперед
-                          //     }
-                          //   },
-                          //   onLongPress: () {
-                          //     if (connection != null &&
-                          //         connection!.isConnected) {
-                          //       connection!.output.add(Uint8List.fromList(
-                          //           'R'.codeUnits)); // Движение вперед
-                          //     }
-                          //   },
-                          //   child: Text('Право'),
-                          // ),
+                          ElevatedButton(
+                            onPressed: () {
+                              if (connection != null &&
+                                  connection!.isConnected) {
+                                connection!.output.add(Uint8List.fromList(
+                                    'F'.codeUnits)); // Движение вперед
+                              }
+                            },
+                            onLongPress: () {
+                              if (connection != null &&
+                                  connection!.isConnected) {
+                                connection!.output.add(Uint8List.fromList(
+                                    'F'.codeUnits)); // Движение вперед
+                              }
+                            },
+                            child: Text('Вперед'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              if (connection != null &&
+                                  connection!.isConnected) {
+                                connection!.output
+                                    .add(Uint8List.fromList('L'.codeUnits));
+                              }
+                            },
+                            onLongPress: () {
+                              if (connection != null &&
+                                  connection!.isConnected) {
+                                connection!.output
+                                    .add(Uint8List.fromList('L'.codeUnits));
+                              }
+                            },
+                            child: Text('Лево'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              if (connection != null &&
+                                  connection!.isConnected) {
+                                connection!.output.add(Uint8List.fromList(
+                                    'R'.codeUnits)); // Движение вперед
+                              }
+                            },
+                            onLongPress: () {
+                              if (connection != null &&
+                                  connection!.isConnected) {
+                                connection!.output.add(Uint8List.fromList(
+                                    'R'.codeUnits)); // Движение вперед
+                              }
+                            },
+                            child: Text('Право'),
+                          ),
                           // ElevatedButton(
                           //   onPressed: () {
                           //     if (connection != null &&
@@ -450,7 +448,13 @@ class _ControlePrincipalPage extends State<ControlePrincipalPage> {
                             },
                             child: const Text('J'),
                           ),
-
+                          ButtonDoubleComponent(
+                            buttonName: "R",
+                            comandOn: '1',
+                            comandOff: '0',
+                            clientID: clientID,
+                            connection: connection,
+                          ),
                           ElevatedButton(
                             onPressed: () {
                               if (connection != null &&
