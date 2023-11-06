@@ -121,26 +121,18 @@ class _ControlePrincipalPage extends State<ControlePrincipalPage> {
     setState(() {});
   }
 
-  /// Manually stop the active speech recognition session
-  /// Note that there are also timeouts that each platform enforces
-  /// and the SpeechToText plugin supports setting timeouts on the
-  /// listen method.
   void _stopListening() async {
     await _speechToText.stop();
     setState(() {});
   }
 
-  /// This is the callback that the SpeechToText plugin calls when
-  /// the platform returns recognized words.
+
   void _onSpeechResult(SpeechRecognitionResult result) {
     setState(() {
       _lastWords = result.recognizedWords;
     });
   }
 
-// ...
-
-// ...
 
   @override
   void initState() {
@@ -187,7 +179,7 @@ class _ControlePrincipalPage extends State<ControlePrincipalPage> {
                 borderRadius: BorderRadius.circular(7.0)),
             child: Text(
                 (text) {
-                  return text == '/shrug' ? '¯\\_(ツ)_/¯' : text;
+                  return text == '/shrug' ? '__' : text;
                 }(message.text.trim()),
                 style: const TextStyle(color: Colors.white)),
           ),
@@ -238,8 +230,6 @@ class _ControlePrincipalPage extends State<ControlePrincipalPage> {
                                       child: Text(items),
                                     );
                                   }).toList(),
-                                  // After selecting the desired option,it will
-                                  // change button value to selected value
                                   onChanged: (String? newValue) {
                                     setState(() {
                                       language = newValue!;
@@ -254,13 +244,8 @@ class _ControlePrincipalPage extends State<ControlePrincipalPage> {
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     child: Text(
-                      // If listening is active show the recognized words
                       _speechToText.isListening
                           ? _lastWords
-                          // If listening isn't active but could be tell the user
-                          // how to start it, otherwise indicate that speech
-                          // recognition is not yet ready or not supported on
-                          // the target device
                           : _speechEnabled
                               ? 'Tap the microphone to start listening...'
                               : 'Speech not available',
@@ -317,7 +302,6 @@ class _ControlePrincipalPage extends State<ControlePrincipalPage> {
                             },
                             child: const Text('Отправить символ на Arduino'),
                           ),
-
                           Slider(
                             value: speed,
                             onChanged: (value) {
@@ -330,7 +314,6 @@ class _ControlePrincipalPage extends State<ControlePrincipalPage> {
                               });
                             },
                           ),
-
                           FloatingActionButton(
                             onPressed:
                                 // If not yet listening for speech start, otherwise stop
@@ -351,14 +334,6 @@ class _ControlePrincipalPage extends State<ControlePrincipalPage> {
                             },
                             child: const Text('Скорость'),
                           ),
-
-                          // ElevatedButton(
-                          //   onPressed: () {
-                          //     sendData(100); // Отправка числа 42 на Arduino
-                          //   },
-                          //   child: Text('сотка'),
-                          // ),
-
                           ElevatedButton(
                             onPressed: () {
                               if (connection != null &&
@@ -410,33 +385,7 @@ class _ControlePrincipalPage extends State<ControlePrincipalPage> {
                             },
                             child: Text('Право'),
                           ),
-                          // ElevatedButton(
-                          //   onPressed: () {
-                          //     if (connection != null &&
-                          //         connection!.isConnected) {
-                          //       connection!.output.add(Uint8List.fromList(
-                          //           'B'.codeUnits)); // Движение вперед
-                          //     }
-                          //   },
-                          //   onLongPress: () {
-                          //     if (connection != null &&
-                          //         connection!.isConnected) {
-                          //       connection!.output.add(Uint8List.fromList(
-                          //           'B'.codeUnits)); // Движение вперед
-                          //     }
-                          //   },
-                          //   child: Text('Назад'),
-                          // ),
-                          // ElevatedButton(
-                          //   onPressed: () {
-                          //     if (connection != null &&
-                          //         connection!.isConnected) {
-                          //       connection!.output.add(Uint8List.fromList(
-                          //           'S'.codeUnits)); // Движение вперед
-                          //     }
-                          //   },
-                          //   child: Text('STOP'),
-                          // ),
+                          
 
                           ElevatedButton(
                             onPressed: () {
